@@ -1,0 +1,285 @@
+---
+title: "CONCEPTION - Level 3 checks: Study source population"
+subtitle: "Lifestyle and visits"
+output: 
+  html_document:
+    theme: spacelab
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    output_dir: output_dir
+---
+
+
+```{css,  echo = F}
+/*-- Specify div's for 'boxes', change color of TOC and center align titles: --*/
+div.box1 {background-color: #f5f5f0; border-radius: 5px; padding: 30px; margin-right: 0px}
+div.box2 {background-color: #d4e5d2; border-radius: 5px; padding: 30px; margin-right: 0px}
+div.box3 {border-style: solid; border-color: #f5f5f0; border-width: medium; border-radius: 30px; padding: 5px; margin-right: 0px}
+
+.list-group-item.active, .list-group-item.active:focus, .list-group-item.active:hover {background-color: #76b82a; border-color: #76b82a}
+h1 {text-align: center; color: #3c7b8a}
+h2 {text-align: center; color: #76b82a}
+
+/*-- Add logo (based on https://rstudio4edu.github.io/rstudio4edu-book/rmd-fancy.html): --*/
+#TOC::before {content: ""; display: block; height: 60px; margin: 15px 10px 15px; background-image: url("conception_logo.png"); background-size: contain; background-position: center center; background-repeat: no-repeat}
+```
+
+<div class = 'box1'>
+
+<br> 
+
+This report is focusing on:
+<ul>
+<li>The visiting of the several healthcare facilities within the study population </li>
+<li>The availability of lifestyle factor information in the study population. For this section it is mandatory to enrich the script with some information concerning the data. This can be added to Step_Report_01_13_LifeStyle.R in the folder p_steps. If this is not done the section will remain empty.
+</li>
+
+</ul>
+
+
+</div>
+
+<div class = 'box2'>
+
+```{r time_log, echo=F}
+timelog<-fread(paste0(projectFolder,"/g_output/STUDY_SOURCE_POPULATION/Time_log/", "time_study_source_population.csv" ))
+kable(timelog)
+```
+
+```{r, echo=F}
+if("timelog" %in% ls()){rm(timelog)}
+```
+
+</div>
+ 
+ <div class = 'box1'>
+
+Used parameters
+
+```{r, echo=F,include=FALSE}
+parameter_file_fl<-list.files(paste0(projectFolder,"/p_parameters/"),"study_parameters")
+parameter_file<-as.data.table(read_excel(paste0(projectFolder,"/p_parameters/",parameter_file_fl),col_types = "text", sheet = "study_parameters"))
+#Set parameters basic parameters
+study_name <- parameter_file[variable=="StudyName",value]
+start <- as.IDate(parameter_file[variable=="start_study_date",value],"%Y%m%d")
+end <- as.IDate(parameter_file[variable=="end_study_date",value],"%Y%m%d")
+age_min <- parameter_file[variable=="Age_min",value]
+age_max <- parameter_file[variable=="Age_max",value]
+lookback <- parameter_file[variable=="lookback_period",value]
+
+info_start<-data.table(Indicator=c("Study name",
+                                   "Study period",
+                                   "Age",
+                                   "Lookback period"),
+                       Value=c(study_name,
+                               paste(start,end,sep=" / "),
+                               paste(age_min,age_max,sep="-"),
+                               lookback))
+
+```
+
+```{r, echo=FALSE}
+datatable(info_start)
+```
+
+</div>
+
+<br>
+
+<div class = 'box3'>
+
+
+## 1. Number of visits in study population per year and age at the moment of the visit
+
+```{r echo=F}
+
+file<-list.files(paste0(std_source_pop_dir,"Masked/"),"R_01_12_VISITS.csv")
+TEMP <- fread(paste0(std_source_pop_dir,"Masked/",file), sep = ";")  
+
+#TEMP <- fread(paste0(report_dir2,"/",i,"_R_01_12_VISITS.csv"), sep = ";")[, Order := NULL] 
+
+
+
+datatable(TEMP, options = list(scrollX=T), rownames = F)
+
+
+
+rm(TEMP)
+
+
+
+
+```
+
+<br>
+
+----
+
+```{r echo=F,  fig.show="hold", out.width="50%"}
+
+file<-list.files(std_source_pop_dir,"R_01_12_VISITS.csv")
+TEMP <- fread(paste0(std_source_pop_dir,file), sep = ";")  
+
+#TEMP <- fread(paste0(report_dir1,"/",i,"_R_01_12_VISITS.csv"), sep = ";") 
+
+if(nrow(TEMP) > 0) {
+
+bands <- unique(TEMP[,.(Age,Order)])
+setorder(bands,Order)
+bands <- unique(bands[["Age"]])
+#colors <- c(2:(length(bands)+1))
+colors <- colorRamps::matlab.like(length(bands))
+
+for(k in 1:length(unique(TEMP[["Visit meaning"]]))){
+
+TEMP1 <- TEMP[get("Visit meaning") == unique(TEMP[["Visit meaning"]])[k],]
+
+TEMP1 <- INPUTMATRIX(
+  
+  d = TEMP1,
+  value = "Visit rate, No. of visits/1000 PY",
+  type = "none",
+  var = "Calendar year",
+  var.v = c(min(TEMP[["Calendar year" ]]):max(TEMP[["Calendar year" ]])),
+  cat = "Age",
+  cat.v = bands,
+  per = F
+  
+  
+)
+
+par(mar = c(5,5,1,3),mgp = c(4,1,0), oma = c(2,1,1,3), xpd = T)
+
+
+
+Line_plot2(
+  
+  MATRIX = TEMP1,
+  title = unique(TEMP[["Visit meaning"]])[k],
+  x.l = "Year",
+  y.l = "visits/1000 PY",
+  color = colors,
+  leg = F,
+  l.size = 1.2,
+  tck.size = 1
+  
+  
+  
+
+)
+
+if(as.integer(k)%%2 == 0) legend("right",inset = c(-0.1,1, 0),title = "Agebands",legend =  bands, col = colors, cex = 0.8,pch=10, box.col = "white")
+
+rm(TEMP1)
+
+}
+rm(colors,bands)
+}
+rm(TEMP)
+
+
+
+```
+
+<br>
+
+---
+
+```{r echo=F, eval=F}
+file<-list.files(std_source_pop_dir,"R_01_12_VISITS.csv")
+TEMP <- fread(paste0(std_source_pop_dir,file), sep = ";")  
+
+if(nrow(TEMP) > 0) {
+  
+  bands <- unique(TEMP[["Age"]])
+  colors <- colorRamps::matlab.like(length(bands))
+  meanings <- unique(TEMP[["Visit meaning"]])
+  years <- c(min(TEMP[["Calendar year" ]]):max(TEMP[["Calendar year" ]]))
+  
+  for(k in 1:length(meanings)){
+    
+    TEMP1 <- TEMP[get("Visit meaning") == unique(TEMP[["Visit meaning"]])[k],]
+    
+    TEMP1 <- INPUTMATRIX(
+      
+      d = TEMP1,
+      value = "Visit rate, No. of visits/1000 PY",
+      type = "none",
+      var = "Calendar year",
+      var.v = years,
+      cat = "Age",
+      cat.v = bands,
+      per = F,
+      output = "long"
+      
+      
+    )
+    
+    TEMP1[, Meaning := meanings[k]]
+    
+    if(k == 1) TEMP2 <- TEMP1[0]
+    TEMP2 <- rbind(TEMP2,TEMP1)
+    rm(TEMP1)
+    
+}
+
+setnames(TEMP2,c("Age","Calendar year","Visit rate, No. of visits/1000 PY"),c("Ageband","Year","Rate"))
+TEMP2[,Year := as.numeric(Year)]
+
+aa <- ggplot(TEMP2, aes(fill = Ageband,x = Year, y = Rate)) +
+  #geom_bar(position="stack",stat = "identity") +
+  geom_line(aes(color = Ageband)) +
+  geom_point(aes(color = Ageband)) +
+  facet_wrap(~ Meaning, ncol=2, scales = "fixed") +
+  xlab("Year") +
+  ylab("PY")+
+  theme_classic() +
+  #ggtitle("Source") +
+  scale_fill_manual(values = colors) +
+  theme(plot.margin=unit(c(0,0,0,0),"cm")) +
+  theme(axis.text.x = element_text(margin = margin(t = 5))) +
+  theme(legend.title = element_text(size = 7),legend.text = element_text(size = 7)) 
+  #scale_x_continuous(breaks = x.thicks, labels = x.labels)
+
+ggplotly(aa)
+
+}
+if(nrow(TEMP) > 0) {rm(bands, colors, meanings,years,TEMP,TEMP2,aa)}else{rm(TEMP)}
+
+
+```
+
+</div>
+
+<div class = 'box3'>
+
+## 2. Lifestyle facors in the study population
+
+```{r echo=F}
+
+file<-list.files(paste0(std_source_pop_dir,"Masked/"),"R_01_13_LIFESTYLE.csv")
+TEMP <- fread(paste0(std_source_pop_dir,"Masked/",file), sep = ";")[, Order := NULL]
+
+#TEMP <- fread(paste0(report_dir2,"/",i,"_R_01_13_LIFESTYLE.csv"), sep = ";")[, Order := NULL]
+
+datatable(TEMP, options = list(scrollX=T), rownames = F)
+
+
+
+rm(TEMP)
+
+
+
+
+```
+
+</div>
+
+<div class = 'box2'>
+
+Author: Roel Elbers   
+email: r.j.h.elbers@umcutrecht.nl   
+Organisation: UMC Utrecht, Utrecht, The Netherlands    
+
+</div>

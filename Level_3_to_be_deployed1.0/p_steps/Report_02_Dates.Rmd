@@ -1,0 +1,498 @@
+---
+title: "CONCEPTION - Level 3 checks: Study source population"
+subtitle: "Dates distribution"
+output: 
+  html_document:
+    theme: spacelab
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    output_dir: output_dir
+---
+
+
+```{css,  echo = F}
+/*-- Specify div's for 'boxes', change color of TOC and center align titles: --*/
+div.box1 {background-color: #f5f5f0; border-radius: 5px; padding: 30px; margin-right: 0px}
+div.box2 {background-color: #d4e5d2; border-radius: 5px; padding: 30px; margin-right: 0px}
+div.box3 {border-style: solid; border-color: #f5f5f0; border-width: medium; border-radius: 30px; padding: 5px; margin-right: 0px}
+
+.list-group-item.active, .list-group-item.active:focus, .list-group-item.active:hover {background-color: #76b82a; border-color: #76b82a}
+h1 {text-align: center; color: #3c7b8a}
+h2 {text-align: center; color: #76b82a}
+
+/*-- Add logo (based on https://rstudio4edu.github.io/rstudio4edu-book/rmd-fancy.html): --*/
+#TOC::before {content: ""; display: block; height: 60px; margin: 15px 10px 15px; background-image: url("conception_logo.png"); background-size: contain; background-position: center center; background-repeat: no-repeat}
+```
+
+<div class = 'box1'>
+
+
+<br> 
+
+The aim of this report is to check for patterns in some key date values in the study population.
+<ul>
+<li>Start follow up</li>
+<li>op_start_date</li>
+<li>End follow up</li>
+<li>op_end_date</li>
+<li>Birth date </li>
+</ul>
+
+</div>
+
+<br>
+
+<div class = 'box2'>
+
+```{r time_log, echo=F}
+timelog<-fread(paste0(projectFolder,"/g_output/STUDY_SOURCE_POPULATION/Time_log/", "time_study_source_population.csv" ))
+kable(timelog)
+```
+
+```{r, echo=F}
+if("timelog" %in% ls()){rm(timelog)}
+```
+
+</div>
+
+<div class = 'box1'>
+
+Used parameters
+
+```{r, echo=F,include=FALSE}
+parameter_file_fl<-list.files(paste0(projectFolder,"/p_parameters/"),"study_parameters")
+parameter_file<-as.data.table(read_excel(paste0(projectFolder,"/p_parameters/",parameter_file_fl),col_types = "text", sheet = "study_parameters"))
+#Set parameters basic parameters
+study_name <- parameter_file[variable=="StudyName",value]
+start <- as.IDate(parameter_file[variable=="start_study_date",value],"%Y%m%d")
+end <- as.IDate(parameter_file[variable=="end_study_date",value],"%Y%m%d")
+age_min <- parameter_file[variable=="Age_min",value]
+age_max <- parameter_file[variable=="Age_max",value]
+lookback <- parameter_file[variable=="lookback_period",value]
+
+info_start<-data.table(Indicator=c("Study name",
+                                   "Study period",
+                                   "Age",
+                                   "Lookback period"),
+                       Value=c(study_name,
+                               paste(start,end,sep=" / "),
+                               paste(age_min,age_max,sep="-"),
+                               lookback))
+
+```
+
+```{r, echo=FALSE}
+datatable(info_start)
+```
+
+</div>
+
+<div class = 'box3'>
+
+## 1. Distribution of start_follow_up  by year and month
+
+```{r echo=F,fig.width=9,fig.height=5}
+file<-list.files(paste0(std_source_pop_dir,"Masked/"),"R_01_0608_DT_start_follow_up.csv")
+TEMP <- fread(paste0(std_source_pop_dir,"Masked/",file), sep = ";")  
+
+
+
+    #TEMP <- fread(paste0(report_dir2,"/",i,"_R_01_0608_DT_start_follow_up.csv"), sep = ";")
+    
+    datatable(TEMP, options = list(scrollX=T),rownames = F)
+    
+    
+    rm(TEMP)
+
+    file_2<-list.files(paste0(std_source_pop_dir,"RDS/"),"R_01_0608_DT_start_follow_up_PLOT.rds")
+   TEMP <- readRDS(paste0(std_source_pop_dir,"RDS/",file_2))  
+
+    #TEMP <- readRDS(paste0(report_dir1,i,"_R_01_0608_DT_start_follow_up_PLOT.rds"))
+    
+    if(nrow(TEMP) > 0) {
+    #par(mar = c(3,3,1,4),mgp = c(2,1,0), oma = c(1,1,1,1), xpd = T)
+    #Line_plot2(
+    #MATRIX = TEMP,
+    #title = "",
+    #x.l = "Month",
+    #y.l = "Count"
+    
+    #)
+    
+    TEMP[, start_follow_up_month := as.numeric(start_follow_up_month) ]
+    setnames(TEMP,"start_follow_up_year","Year")
+    
+          
+    ggplotly(ggplot(TEMP, aes(x = start_follow_up_month, y = count, group = Year)) +
+             geom_line(aes(color = Year)) +
+             geom_point(aes(color = Year)) + 
+             #facet_wrap(~ meaning, ncol=2, scales = "fixed") +
+             ggtitle("") + 
+             xlab("Month") +
+             ylab("Count")+
+             theme_classic() +
+             guides(shape = guide_legend(override.aes = list(size = 0.5))) +
+             theme(text=element_text(size = 10),
+                   axis.text.x = element_text(angle = 0, hjust = 1),
+                   axis.title.x = element_text(colour = "#76b82a"),
+                   axis.title.y = element_text(colour = "#76b82a"),
+                   plot.title = element_text(colour = "#76b82a"),
+                   strip.text.y = element_text(angle = 0),
+                   legend.title = element_text(size = 12, face = "bold"), 
+                   legend.text = element_text(size = 7)) +
+             #scale_x_continuous(breaks = unique(TEMP[["start_follow_up_month"]]), labels = as.character(unique(TEMP[["start_follow_up_month"]]))) 
+          
+             scale_x_continuous(breaks = c(1:12), labels = as.character(c(1:12)))
+           
+           ) 
+    
+      
+      
+    }
+    rm(TEMP)
+
+
+```
+
+</div>
+
+<br>
+
+<div class = 'box3'>
+## 2. Distribution of op_start_date  by year and month
+
+```{r echo=F,fig.width=9,fig.height=5}
+
+file<-list.files(paste0(std_source_pop_dir,"Masked/"),"R_01_0608_DT_op_start_date.csv")
+TEMP <- fread(paste0(std_source_pop_dir,"Masked/",file), sep = ";")  
+
+
+    #TEMP <- fread(paste0(report_dir2,"/",i,"_R_01_0608_DT_op_start_date.csv"), sep = ";")
+    
+    datatable(TEMP, options = list(scrollX=T),rownames = F)
+    
+    
+    rm(TEMP)
+
+    file_2<-list.files(paste0(std_source_pop_dir,"RDS/"),"R_01_0608_DT_op_start_date_PLOT.rds")
+   TEMP <- readRDS(paste0(std_source_pop_dir,"RDS/",file_2))  
+
+    #TEMP <- readRDS(paste0(report_dir1,"/",i,"_R_01_0608_DT_op_start_date_PLOT.rds"))
+    
+    if(nrow(TEMP) > 0) {
+    #par(mar = c(3,3,1,4),mgp = c(2,1,0), oma = c(1,1,1,1), xpd = T)
+    #Line_plot2(
+    #MATRIX = TEMP,
+    #title = "",
+    #x.l = "Month",
+    #y.l = "Count"
+    
+    #)
+    
+    TEMP[, op_start_date_month := as.numeric(op_start_date_month) ]
+    setnames(TEMP,"op_start_date_year","Year")
+    
+          
+    ggplotly(ggplot(TEMP, aes(x = op_start_date_month, y = count, group = Year)) +
+             geom_line(aes(color = Year)) +
+             geom_point(aes(color = Year)) + 
+             #facet_wrap(~ meaning, ncol=2, scales = "fixed") +
+             ggtitle("") + 
+             xlab("Month") +
+             ylab("Count")+
+             theme_classic() +
+             guides(shape = guide_legend(override.aes = list(size = 0.5))) +
+             theme(text=element_text(size = 10),
+                   axis.text.x = element_text(angle = 0, hjust = 1),
+                   axis.title.x = element_text(colour = "#76b82a"),
+                   axis.title.y = element_text(colour = "#76b82a"),
+                   plot.title = element_text(colour = "#76b82a"),
+                   strip.text.y = element_text(angle = 0),
+                   legend.title = element_text(size = 12, face = "bold"), 
+                   legend.text = element_text(size = 7)) +
+             
+             scale_x_continuous(breaks = c(1:12), labels = as.character(c(1:12)))
+           
+           ) 
+    
+      
+      
+    }
+    rm(TEMP)
+
+
+```
+
+</div>
+
+<br>
+
+<div class = 'box3'>
+## 3. Distribution of end_follow_up by year and month
+
+```{r echo=F,fig.width=9,fig.height=5}
+file<-list.files(paste0(std_source_pop_dir,"Masked/"),"R_01_0608_DT_end_follow_up.csv")
+TEMP <- fread(paste0(std_source_pop_dir,"Masked/",file), sep = ";")  
+
+
+
+    #TEMP <- fread(paste0(report_dir2,"/",i,"_R_01_0608_DT_end_follow_up.csv"), sep = ";")
+    
+    datatable(TEMP, options = list(scrollX=T),rownames = F)
+    
+    
+    rm(TEMP)
+    
+    
+  file_2<-list.files(paste0(std_source_pop_dir,"RDS/"),"R_01_0608_DT_end_follow_up_PLOT.rds")
+   TEMP <- readRDS(paste0(std_source_pop_dir,"RDS/",file_2))  
+
+    #TEMP <- readRDS(paste0(report_dir1,"/",i,"_R_01_0608_DT_end_follow_up_PLOT.rds"))
+    
+    if(nrow(TEMP) > 0) {
+    
+    TEMP[, end_follow_up_month := as.numeric(end_follow_up_month) ]
+    setnames(TEMP,"end_follow_up_year","Year")
+    
+          
+    ggplotly(ggplot(TEMP, aes(x = end_follow_up_month, y = count, group = Year)) +
+             geom_line(aes(color = Year)) +
+             geom_point(aes(color = Year)) + 
+             #facet_wrap(~ meaning, ncol=2, scales = "fixed") +
+             ggtitle("") + 
+             xlab("Month") +
+             ylab("Count")+
+             theme_classic() +
+             guides(shape = guide_legend(override.aes = list(size = 0.5))) +
+             theme(text=element_text(size = 10),
+                   axis.text.x = element_text(angle = 0, hjust = 1),
+                   axis.title.x = element_text(colour = "#76b82a"),
+                   axis.title.y = element_text(colour = "#76b82a"),
+                   plot.title = element_text(colour = "#76b82a"),
+                   strip.text.y = element_text(angle = 0),
+                   legend.title = element_text(size = 12, face = "bold"), 
+                   legend.text = element_text(size = 7)) +
+             #scale_x_continuous(breaks = unique(TEMP[["start_follow_up_month"]]), labels = as.character(unique(TEMP[["start_follow_up_month"]]))) 
+            scale_x_continuous(breaks = c(1:12), labels = as.character(c(1:12)))
+             #scale_y_continuous(limits = c(0,1.1*max(TEMP1[["PY"]])))
+           
+           )   
+      
+      
+      
+    #par(mar = c(3,3,1,4),mgp = c(2,1,0), oma = c(1,1,1,1), xpd = T)
+    #Line_plot2(
+    #MATRIX = TEMP,
+    #title = "",
+    #x.l = "Month",
+    #y.l = "Count"
+    #)
+    }
+    #rm(TEMP)
+
+
+
+
+
+```
+
+</div>
+
+<br>
+
+<div class = 'box3'>
+
+## 4. Distribution of op_end_date by year and month
+
+```{r echo=F,fig.width=9,fig.height=5}
+
+file<-list.files(paste0(std_source_pop_dir,"Masked/"),"R_01_0608_DT_op_end_date.csv")
+TEMP <- fread(paste0(std_source_pop_dir,"Masked/",file), sep = ";")  
+
+    #TEMP <- fread(paste0(report_dir2,"/",i,"_R_01_0608_DT_op_end_date.csv"), sep = ";")
+    
+    datatable(TEMP, options = list(scrollX=T),rownames = F)
+    
+    
+    rm(TEMP)
+    
+    
+    file_2<-list.files(paste0(std_source_pop_dir,"RDS/"),"R_01_0608_DT_op_end_date_PLOT.rds")
+   TEMP <- readRDS(paste0(std_source_pop_dir,"RDS/",file_2))  
+
+    #TEMP <- readRDS(paste0(report_dir1,"/",i,"_R_01_0608_DT_op_end_date_PLOT.rds"))
+    
+    if(nrow(TEMP) > 0) {
+    
+    TEMP[, op_end_date_month := as.numeric(op_end_date_month) ]
+    setnames(TEMP,"op_end_date_year","Year")
+    
+          
+    ggplotly(ggplot(TEMP, aes(x = op_end_date_month, y = count, group = Year)) +
+             geom_line(aes(color = Year)) +
+             geom_point(aes(color = Year)) + 
+             #facet_wrap(~ meaning, ncol=2, scales = "fixed") +
+             ggtitle("") + 
+             xlab("Month") +
+             ylab("Count")+
+             theme_classic() +
+             guides(shape = guide_legend(override.aes = list(size = 0.5))) +
+             theme(text=element_text(size = 10),
+                   axis.text.x = element_text(angle = 0, hjust = 1),
+                   axis.title.x = element_text(colour = "#76b82a"),
+                   axis.title.y = element_text(colour = "#76b82a"),
+                   plot.title = element_text(colour = "#76b82a"),
+                   strip.text.y = element_text(angle = 0),
+                   legend.title = element_text(size = 12, face = "bold"), 
+                   legend.text = element_text(size = 7)) +
+             #scale_x_continuous(breaks = unique(TEMP[["start_follow_up_month"]]), labels = as.character(unique(TEMP[["start_follow_up_month"]]))) 
+            scale_x_continuous(breaks = c(1:12), labels = as.character(c(1:12)))
+             #scale_y_continuous(limits = c(0,1.1*max(TEMP1[["PY"]])))
+           
+           )   
+      
+      
+      
+    #par(mar = c(3,3,1,4),mgp = c(2,1,0), oma = c(1,1,1,1), xpd = T)
+    #Line_plot2(
+    #MATRIX = TEMP,
+    #title = "",
+    #x.l = "Month",
+    #y.l = "Count"
+    #)
+    }
+    #rm(TEMP)
+
+
+
+
+
+```
+
+</div>
+
+<br>
+
+<div class = 'box3'>
+
+## 5. Distribution of birth date by year and month
+
+```{r echo=F}
+
+file<-list.files(paste0(std_source_pop_dir,"Masked/"),"R_01_0608_DT_birth_date.csv")
+TEMP <- fread(paste0(std_source_pop_dir,"Masked/",file), sep = ";")  
+
+
+    #TEMP <- fread(paste0(report_dir2,"/",i,"_R_01_0608_DT_birth_date.csv"), sep = ";")
+    
+    datatable(TEMP, options = list(scrollX=T),rownames = F)
+    
+    rm(TEMP)
+    
+    
+   
+   TEMP <- fread(paste0(std_source_pop_dir,file), sep = ";")  
+   
+    #TEMP <- fread(paste0(report_dir1,"/",i,"_R_01_0608_DT_birth_date.csv"), sep = ";")
+
+    if(nrow(TEMP) > 0) {
+    
+    TEMP <- melt(TEMP,id.vars = "year",variable.name = "month",value.name = "count")[,":=" (year = as.character(year),month = as.character(month),count = as.numeric(count))]
+    
+    
+    TEMP <- INPUTMATRIX(
+      
+      d = TEMP,
+      value = "count",
+      type = "none",
+      var = "month",
+      var.v = c(1:12),
+      cat = "year",
+      cat.v = c(min(TEMP[["year"]]):max(TEMP[["year"]])),
+      per = F
+      
+      
+    )
+    
+    
+    heatmap(TEMP,Rowv = NA, Colv = NA, xlab = "Month", ylab = "Year", scale = "none", distfun = dist(x, method = "euclidean")   )
+    
+    
+    
+        
+    }    
+    
+    rm(TEMP)
+
+
+    
+
+
+
+```
+
+</div>
+
+<br>
+
+<div class = 'box3'>
+
+## 6. Distribution of birth date by day month
+
+```{r echo=F}
+
+file<-list.files(paste0(std_source_pop_dir,"Masked/"),"R_01_09_DT_birth_date_day.csv")
+TEMP <- fread(paste0(std_source_pop_dir,"Masked/",file), sep = ";")  
+
+#TEMP <- fread(paste0(report_dir2,"/",i,"_R_01_09_DT_birth_date_day.csv"), sep = ";")  
+
+datatable(TEMP, options = list(scrollX=T), rownames = F)
+
+rm(TEMP)
+
+ TEMP <- fread(paste0(std_source_pop_dir,file), sep = ";")  
+ 
+#TEMP <- fread(paste0(report_dir1,"/",i,"_R_01_09_DT_birth_date_day.csv"), sep = ";")
+
+if(nrow(TEMP) > 0) {
+
+TEMP <- melt(TEMP,id.vars = "day",variable.name = "month",value.name = "count")[,":=" (day = as.character(day),month = as.character(month),count = as.numeric(count))]
+
+TEMP <- INPUTMATRIX(
+  
+  d = TEMP,
+  value = "count",
+  type = "none",
+  var = "month",
+  var.v = c(1:12),
+  cat = "day",
+  cat.v = c(1:31),
+  per = F
+  
+  
+)
+
+
+heatmap(TEMP,Rowv = NA, Colv = NA, xlab = "Month", ylab = "Day", scale = "none", distfun = dist(x, method = "euclidean")   )
+
+}
+
+rm(TEMP)
+
+
+
+
+
+
+```
+
+</div>
+
+<div class = 'box2'>
+
+Author: Roel Elbers   
+email: r.j.h.elbers@umcutrecht.nl   
+Organisation: UMC Utrecht, Utrecht, The Netherlands    
+
+</div>

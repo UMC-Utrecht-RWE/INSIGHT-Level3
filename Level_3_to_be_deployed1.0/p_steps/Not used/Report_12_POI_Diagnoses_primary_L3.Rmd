@@ -1,0 +1,1499 @@
+---
+title: "CONCEPTION - Level 3 checks: Population of interest(POI)"
+subtitle: "Medicine use, vaccine exposure and pregnancy records after a diagnoses"
+output: 
+  html_document:
+    theme: spacelab
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    output_dir: output_dir
+---
+
+```{css,  echo = F}
+/*-- Specify div's for 'boxes', change color of TOC and center align titles: --*/
+div.box1 {background-color: #f5f5f0; border-radius: 5px; padding: 30px; margin-right: 0px}
+div.box2 {border-style: solid; border-color: #f5f5f0; border-width: medium; border-radius: 30px; padding: 5px; margin-right: 0px}
+div.box3 {border-style: solid; border-color: #f5f5f0; border-width: medium; border-radius: 30px; padding: 5px; margin-right: 0px}
+div.box4 {border-style: solid; border-color: #f5f5f0; border-width: medium; border-radius: 30px; padding: 5px; margin-right: 0px}
+div.box5 {border-style: solid; border-color: #f5f5f0; border-width: medium; border-radius: 30px; padding: 5px; margin-right: 0px}
+div.box6 {border-style: solid; border-color: #f5f5f0; border-width: medium; border-radius: 30px; padding: 5px; margin-right: 0px}
+
+.list-group-item.active, .list-group-item.active:focus, .list-group-item.active:hover {background-color: #76b82a; border-color: #76b82a}
+h1 {text-align: center; color: #3c7b8a}
+h2 {text-align: center; color: #76b82a}
+
+/*-- Add logo (based on https://rstudio4edu.github.io/rstudio4edu-book/rmd-fancy.html): --*/
+#TOC::before {content: ""; display: block; height: 60px; margin: 30px 10px 30px; background-image: url("conception_logo.png"); background-size: contain; background-position: center center; background-repeat: no-repeat}
+```
+
+```{r set_locale, include=FALSE}
+Sys.setlocale("LC_ALL", "C")
+`%!in%` = Negate(`%in%`)
+```
+
+<div class = 'box1'>
+
+**Level 3:** Medicines use, vaccine exposure and pregnancy records after a diagnoses
+
+ - **Script directory:** `r projectFolder`
+ - **Date/time:** `r Sys.time()`
+ - **DAP:** `r data_access_provider_name`
+ - **Data source:** `r data_source_name`
+
+<br> 
+```{r time_log, echo=F}
+if (subpopulations_present=="No"){
+timelog_poi<-fread(paste0(poi_dir,"Time_log/", "time_poi.csv" ))
+kable(timelog_poi)
+} else {
+timelog_poi<-fread(paste0(poi_dir,subpopulations_names[a], "/Time_log/","time_poi.csv"))
+kable(timelog_poi)
+}
+```
+
+```{r, echo=F}
+if("timelog_poi" %in% ls()){rm(timelog_poi)}
+```
+
+**Level 3:** Counts and prevalence in the populations of interest   
+Populations of interest:    
+
+***Pregnancies in:***    
+Women with a diagnosis record    
+
+***Medication exposure in:***    
+Women with a diagnosis record    
+Pregnant women    
+
+***Vaccine exposure in:***    
+Women with a diagnosis record    
+Pregnant women    
+
+
+<br> 
+
+The analysis is performed as follows:
+![analysis steps](poi_counts.png)
+
+<br>
+
+If subpopulations are available in your data the analysis will be performed separately for each subpopulation.
+In case there is an overlapping subpopulation only subjects in the overlap period will be taken into account.
+***Example:***
+
+<br>
+
+![subpopulations analysis](subpopulations.png)
+
+<br>
+
+</div>
+
+<br>
+
+<div class = 'box2'>
+
+
+## 1. Pregnancy in women after a diagnosis
+
+<br> 
+
+Excluded records
+```{r echo=F, warning=FALSE}
+if (subpopulations_present=="No"){
+  if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_PREGNANCY")), pattern="diag_preg_prior_removed.csv"))>0){
+fl<-paste0(poi_dir,"EVENTS_PREGNANCY/")
+res<-fread(paste0(fl,list.files(fl,"diag_preg_prior_removed.csv")))
+if(res[,.N]>0){
+datatable(res, options = list(scrollX=T))
+  } else {
+    res<-NULL
+  print("This table cannot be produced based on the available data.")
+  }
+} else {
+  res<-NULL
+  print("This table cannot be produced based on the available data.")
+}
+} else {
+    if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_PREGNANCY/",subpopulations_names[a], "/Masked/")), pattern="diag_preg_prior_removed.csv"))>0){
+      fl<-paste0(poi_dir,"EVENTS_PREGNANCY/",subpopulations_names[a],"/")
+    res<-fread(paste0(fl, list.files(fl, paste0(subpopulations_names[a],"_diag_preg_prior_removed.csv"))))
+    if(res[,.N]>0){
+datatable(res, options = list(scrollX=T))
+    } else {
+      res<-NULL
+    print("This table cannot be produced based on the available data.") 
+    }
+  } else {
+    res<-NULL
+    print("This table cannot be produced based on the available data.")
+  }
+}
+```
+
+```{r, echo=F}
+if("fl" %in% ls()){rm(fl)}
+if("res" %in% ls()){rm(res)}
+```
+
+<br>
+
+### Pregnancy occurrence prevalence after a diagnosis
+
+```{r echo=F, warning=FALSE}
+if (subpopulations_present=="No"){
+  if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_PREGNANCY/Masked/")), pattern="diag_preg_prevalence_y_masked.csv"))>0){
+fl<-paste0(poi_dir,"EVENTS_PREGNANCY/Masked/")
+res_1<-fread(paste0(fl,list.files(fl,"diag_preg_prevalence_y_masked.csv")))
+if(res_1[,.N]>0){
+datatable(res_1, options = list(scrollX=T))
+  } else {
+    res_1<-NULL
+  print("This table cannot be produced based on the available data.")
+  }
+} else {
+  res_1<-NULL
+  print("This table cannot be produced based on the available data.")
+}
+} else {
+    if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_PREGNANCY/",subpopulations_names[a], "/Masked/")), pattern="diag_preg_prevalence_y_masked.csv"))>0){
+      fl<-paste0(poi_dir,"EVENTS_PREGNANCY/",subpopulations_names[a], "/Masked/")
+    res_1<-fread(paste0(fl, list.files(fl, paste0(subpopulations_names[a],"_diag_preg_prevalence_y_masked.csv"))))
+    if(res_1[,.N]>0){
+datatable(res_1, options = list(scrollX=T))
+    } else {
+      res_1<-NULL
+    print("This table cannot be produced based on the available data.") 
+    }
+  } else {
+    res_1<-NULL
+    print("This table cannot be produced based on the available data.")
+  }
+}
+```
+
+<br> 
+
+Counts smaller than 5 will be replaced with a count of 3. Then the approximate prevalence rates will be calculated as number of pregnant women with a diagnosis divided by number of subjects with a diagnosis and multiplied by 100.  
+
+```{r rates_1_rec_graph, echo=FALSE, warning=FALSE}
+if(!is.null(res_1)){
+rec_graph<-res_1[no_pregnant_women=="<5", no_pregnant_women:= 3]
+rec_graph<-rec_graph[,no_pregnant_women:=as.numeric(no_pregnant_women)]
+rec_graph<-rec_graph[no_subjects=="<5", no_subjects:= 3]
+rec_graph<-rec_graph[,no_subjects:=as.numeric(no_subjects)]
+rec_graph<-rec_graph[,year:=as.factor(year)]
+rec_graph<-rec_graph[prevalence_pregnancies=="N/A", prevalence_pregnancies:= round((no_pregnant_women/no_subjects)*100,2)]
+} else {
+ rec_graph<-NULL 
+}
+
+#Set columns to the right type
+rec_graph[,prevalence_pregnancies:=as.numeric(as.character(prevalence_pregnancies))]
+
+if(!is.null(rec_graph)){
+  fig.1<-vector(mode="list", length=length(unique(rec_graph[,stage_of_pregnancy])))
+for(i in 1:length(unique(rec_graph[,stage_of_pregnancy]))){
+rec_graph[stage_of_pregnancy==unique(rec_graph[,stage_of_pregnancy])[i]][,event_definition:=gsub(" ","- \n", event_definition)] 
+fig.1[[i]]<-ggplotly(ggplot(rec_graph[stage_of_pregnancy==unique(rec_graph[,stage_of_pregnancy])[i]], aes(x = year, y = prevalence_pregnancies, group=event_definition)) +
+                           geom_line(aes(color=event_definition)) +
+                           geom_point(aes(color=event_definition)) + 
+                               ggtitle(paste0("Prevalence rate of pregnancy occurrence:", unique(rec_graph[,stage_of_pregnancy])[i])) + 
+                               xlab("Year") +
+                               ylab("Prevalence rate")+
+                             theme_classic() +
+                       scale_y_continuous(labels = label_number(accuracy = 10))+
+                             guides(shape = guide_legend(override.aes = list(size = 0.3))) +
+                               theme(text=element_text(size=10),
+                                 axis.text.x = element_text(angle = 90, hjust = 1),
+                                     axis.title.x = element_text(colour = "#76b82a"),
+                                     axis.title.y = element_text(colour = "#76b82a"),
+                                     plot.title = element_text(colour = "#76b82a"),
+                                     strip.text.y = element_text(angle = 0),
+                                     legend.title = element_text(size = 6),
+               legend.text = element_text(size = 6))) 
+                                     
+} 
+  }
+```
+
+```{r display_rec_1, echo=FALSE}
+if(!is.null(res_1)){
+htmltools::tagList(list(fig.1))
+} else {
+  print("This table cannot be produced based on the available data.") 
+}
+```
+
+```{r, echo=F}
+if("fl" %in% ls()){rm(fl)}
+if("res_1" %in% ls()){rm(res_1)}
+if("res_graph" %in% ls()){rm(res_graph)}
+if("fig.1" %in% ls()){rm(fig.1)}
+```
+
+
+### Number of pregnancy records by event definition, stage of pregnancy and year
+
+```{r echo=F, warning=FALSE}
+if (subpopulations_present=="No"){
+  if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_PREGNANCY/Masked/")), pattern="diag_preg_counts_y_masked.csv"))>0){
+fl<-paste0(poi_dir,"EVENTS_PREGNANCY/Masked/")
+res_2<-fread(paste0(fl,list.files(fl,"diag_preg_counts_y_masked.csv")))
+if(res_2[,.N]>0){
+datatable(res_2, options = list(scrollX=T))
+  } else {
+    res_2<-NULL
+  print("This table cannot be produced based on the available data.")
+  }
+} else {
+  res_2<-NULL
+  print("This table cannot be produced based on the available data.")
+}
+} else {
+    if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_PREGNANCY/",subpopulations_names[a], "/Masked/")), pattern="diag_preg_counts_y_masked.csv"))>0){
+      fl<-paste0(poi_dir,"EVENTS_PREGNANCY/",subpopulations_names[a], "/Masked/")
+    res_2<-fread(paste0(fl, list.files(fl, paste0(subpopulations_names[a],"_diag_preg_counts_y_masked.csv"))))
+    if(res_2[,.N]>0){
+datatable(res_2, options = list(scrollX=T))
+    } else {
+      res_2<-NULL
+    print("This table cannot be produced based on the available data.") 
+    }
+  } else {
+    res_2<-NULL
+    print("This table cannot be produced based on the available data.")
+  }
+}
+```
+
+Counts smaller than 5 will be replaced with a count of 3. Then the approximate percentage will be calculated as number of records divided by total number of records and multiplied by 100. When the number of records is zero it is not shown in the graph. See graph `Pregnancy occurrence prevalence after a diagnosis` for detailed information. 
+
+```{r , echo=FALSE, warning=FALSE}
+if(!is.null(res_2)){
+rec_graph<-res_2[no_records=="<5", no_records:= 3]
+rec_graph<-rec_graph[,no_records:=as.numeric(no_records)]
+rec_graph<-rec_graph[total_records=="<5", total_records:= 3]
+rec_graph<-rec_graph[,total_records:=as.numeric(total_records)]
+rec_graph<-rec_graph[,year:=as.factor(year)]
+rec_graph<-rec_graph[percentage=="N/A", percentage:= round((no_records/total_records)*100,2)]
+} else {
+ rec_graph<-NULL 
+}
+#Set columns to the right type
+rec_graph[,percentage:=as.numeric(as.character(percentage))]
+
+
+if(!is.null(rec_graph)){
+  fig.1<-vector(mode="list", length=length(unique(rec_graph[,stage_of_pregnancy])))
+for(i in 1:length(unique(rec_graph[,stage_of_pregnancy]))){
+rec_graph[stage_of_pregnancy==unique(rec_graph[,stage_of_pregnancy])[i]][,event_definition:=gsub(" ","- \n", event_definition)] 
+fig.1[[i]]<-ggplotly(ggplot(rec_graph[stage_of_pregnancy==unique(rec_graph[,stage_of_pregnancy])[i]], aes(x = year, y = percentage, group=event_definition)) +
+                           geom_line(aes(color=event_definition)) +
+                           geom_point(aes(color=event_definition)) + 
+                               ggtitle(paste0("Number of pregnancy records:", unique(rec_graph[,stage_of_pregnancy])[i])) + 
+                               xlab("Year") +
+                               ylab("Percentage")+
+                             theme_classic() +
+                       scale_y_continuous(labels = label_number(accuracy = 10))+
+                             guides(shape = guide_legend(override.aes = list(size = 0.3))) +
+                               theme(text=element_text(size=10),
+                                 axis.text.x = element_text(angle = 90, hjust = 1),
+                                     axis.title.x = element_text(colour = "#76b82a"),
+                                     axis.title.y = element_text(colour = "#76b82a"),
+                                     plot.title = element_text(colour = "#76b82a"),
+                                     strip.text.y = element_text(angle = 0),
+                                     legend.title = element_text(size = 6),
+               legend.text = element_text(size = 6))) 
+                                     
+} 
+  }
+```
+
+```{r , echo=FALSE}
+if(!is.null(res_2)){
+htmltools::tagList(list(fig.1))
+} else {
+  print("This table cannot be produced based on the available data.") 
+}
+```
+
+```{r, echo=F}
+if("fl" %in% ls()){rm(fl)}
+if("res_2" %in% ls()){rm(res_2)}
+if("res_graph" %in% ls()){rm(res_graph)}
+if("fig.1" %in% ls()){rm(fig.1)}
+```
+
+<br>
+
+### Number of pregnancy records by event definition, stage of pregnancy, meaning and year
+
+```{r echo=F, warning=FALSE}
+if (subpopulations_present=="No"){
+  if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_PREGNANCY/Masked/")), pattern="diag_preg_counts_ym_masked.csv"))>0){
+fl<-paste0(poi_dir,"EVENTS_PREGNANCY/Masked/")
+res_3<-fread(paste0(fl,list.files(fl,"diag_preg_counts_ym_masked.csv")))
+if(res_3[,.N]>0){
+datatable(res_3, options = list(scrollX=T))
+  } else {
+    res_3<-NULL
+  print("This table cannot be produced based on the available data.")
+  }
+} else {
+  res_3<-NULL
+  print("This table cannot be produced based on the available data.")
+}
+} else {
+    if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_PREGNANCY/",subpopulations_names[a], "/Masked/")), pattern="diag_preg_counts_ym_masked.csv"))>0){
+      fl<-paste0(poi_dir,"EVENTS_PREGNANCY/",subpopulations_names[a], "/Masked/")
+    res_3<-fread(paste0(fl, list.files(fl, paste0(subpopulations_names[a],"_diag_preg_counts_ym_masked.csv"))))
+    if(res_3[,.N]>0){
+datatable(res_3, options = list(scrollX=T))
+    } else {
+      res_3<-NULL
+    print("This table cannot be produced based on the available data.") 
+    }
+  } else {
+    res_3<-NULL
+    print("This table cannot be produced based on the available data.")
+  }
+}
+```
+
+Counts smaller than 5 will be replaced with a count of 3. Then the approximate percentage will be calculated as number of records divided by total number of records and multiplied by 100. When the number of records is zero it is not shown in the graph. See graph `Pregnancy occurrence prevalence after a diagnosis` for detailed information. 
+
+```{r , echo=FALSE, warning=FALSE}
+if(!is.null(res_3)){
+rec_graph<-res_3[no_records=="<5", no_records:= 3]
+rec_graph<-rec_graph[,no_records:=as.numeric(no_records)]
+rec_graph<-rec_graph[total_records=="<5", total_records:= 3]
+rec_graph<-rec_graph[,total_records:=as.numeric(total_records)]
+rec_graph<-rec_graph[,year:=as.factor(year)]
+rec_graph<-rec_graph[percentage=="N/A", percentage:= round((no_records/total_records)*100,2)]
+} else {
+ rec_graph<-NULL 
+}
+#Set columns to the right type
+rec_graph[,percentage:=as.numeric(as.character(percentage))]
+
+
+if(!is.null(rec_graph)){
+  fig.1<-vector(mode="list", length=length(unique(rec_graph[,event_definition])))
+for(i in 1:length(unique(rec_graph[,event_definition]))){
+rec_graph[event_definition==unique(rec_graph[,event_definition])[i]][,meaning:=gsub(" ","- \n", meaning)] 
+fig.1[[i]]<-ggplotly(ggplot(rec_graph[event_definition==unique(rec_graph[,event_definition])[i]], aes(x = year, y = percentage, group=event_definition)) +
+                           geom_line(aes(color=meaning)) +
+                           geom_point(aes(color=meaning)) + 
+                               ggtitle(paste0("Number of pregnancy records:", unique(rec_graph[,event_definition])[i])) + 
+                       facet_wrap(~stage_of_pregnancy)+
+                               xlab("Year") +
+                               ylab("Percentage")+
+                             theme_classic() +
+                       scale_y_continuous(labels = label_number(accuracy = 10))+
+                             guides(shape = guide_legend(override.aes = list(size = 0.3))) +
+                               theme(text=element_text(size=10),
+                                 axis.text.x = element_text(angle = 90, hjust = 1),
+                                     axis.title.x = element_text(colour = "#76b82a"),
+                                     axis.title.y = element_text(colour = "#76b82a"),
+                                     plot.title = element_text(colour = "#76b82a"),
+                                     strip.text.y = element_text(angle = 0),
+                                     legend.title = element_text(size = 6),
+               legend.text = element_text(size = 6))) 
+                                     
+} 
+  }
+```
+
+```{r , echo=FALSE}
+if(!is.null(res_3)){
+htmltools::tagList(list(fig.1))
+} else {
+  print("This table cannot be produced based on the available data.") 
+}
+```
+
+```{r, echo=F}
+if("fl" %in% ls()){rm(fl)}
+if("res_3" %in% ls()){rm(res_3)}
+if("res_graph" %in% ls()){rm(res_graph)}
+if("fig.1" %in% ls()){rm(fig.1)}
+```
+
+</div>
+
+<br>
+
+<div class = 'box3'>
+
+## 2. Medication use after a diagnosis
+<br> 
+
+Excluded records
+```{r echo=F, warning=FALSE}
+if (subpopulations_present=="No"){
+  if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_MEDICINES")), pattern="diag_med_prior_removed.csv"))>0){
+fl<-paste0(poi_dir,"EVENTS_MEDICINES/")
+res_med<-fread(paste0(fl,list.files(fl,"diag_med_prior_removed.csv")))
+if(res_med[,.N]>0){
+datatable(res_med, options = list(scrollX=T))
+  } else {
+    res_med<-NULL
+  print("This table cannot be produced based on the available data.")
+  }
+} else {
+  res_med<-NULL
+  print("This table cannot be produced based on the available data.")
+}
+} else {
+    if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_MEDICINES/",subpopulations_names[a], "/Masked/")), pattern="diag_med_prior_removed.csv"))>0){
+      fl<-paste0(poi_dir,"EVENTS_MEDICINES/",subpopulations_names[a],"/")
+    res_med<-fread(paste0(fl, list.files(fl, paste0(subpopulations_names[a],"_diag_med_prior_removed.csv"))))
+    if(res_med[,.N]>0){
+datatable(res_med, options = list(scrollX=T))
+    } else {
+      res_med<-NULL
+    print("This table cannot be produced based on the available data.") 
+    }
+  } else {
+    res_med<-NULL
+    print("This table cannot be produced based on the available data.")
+  }
+}
+```
+
+```{r, echo=F}
+if("fl" %in% ls()){rm(fl)}
+if("res_med" %in% ls()){rm(res_med)}
+```
+
+<br>
+
+### Medication use prevalence by event definition, sex, ATC code and year after a diagnosis
+
+```{r echo=F, warning=FALSE}
+if (subpopulations_present=="No"){
+  if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_MEDICINES/Masked/")), pattern="diag_med_prevalence_ys_masked.csv"))>0){
+fl<-paste0(poi_dir,"EVENTS_MEDICINES/Masked/")
+res_4<-fread(paste0(fl,list.files(fl,"diag_med_prevalence_ys_masked.csv")))
+if(res_4[,.N]>0){
+datatable(res_4, options = list(scrollX=T))
+  } else {
+    res_4<-NULL
+  print("This table cannot be produced based on the available data.")
+  }
+} else {
+  res_4<-NULL
+  print("This table cannot be produced based on the available data.")
+}
+} else {
+    if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_MEDICINES/",subpopulations_names[a], "/Masked/")), pattern="diag_med_prevalence_ys_masked.csv"))>0){
+      fl<-paste0(poi_dir,"EVENTS_MEDICINES/",subpopulations_names[a], "/Masked/")
+    res_4<-fread(paste0(fl, list.files(fl, paste0(subpopulations_names[a],"_diag_med_prevalence_ys_masked.csv"))))
+    if(res_4[,.N]>0){
+datatable(res_4, options = list(scrollX=T))
+    } else {
+      res_4<-NULL
+    print("This table cannot be produced based on the available data.") 
+    }
+  } else {
+    res_4<-NULL
+    print("This table cannot be produced based on the available data.")
+  }
+}
+```
+
+Counts smaller than 5 will be replaced with a count of 3. Then the approximate prevalence rates will be calculated as number of users with a diagnosis divided by number of subjects with a diagnosis and multiplied by 100.
+
+```{r , echo=FALSE, warning=FALSE}
+if(!is.null(res_4)){
+rec_graph<-res_4[no_users=="<5", no_users:= 3]
+rec_graph<-rec_graph[,no_users:=as.numeric(no_users)]
+rec_graph<-rec_graph[no_subjects=="<5", no_subjects:= 3]
+rec_graph<-rec_graph[,no_subjects:=as.numeric(no_subjects)]
+rec_graph<-rec_graph[,year:=as.factor(year)]
+rec_graph<-rec_graph[prevalence_medicine_use=="N/A", prevalence_medicine_use:= round((no_users/no_subjects)*100,2)]
+rec_graph<-as.data.table(rec_graph)
+#Set columns to the right type
+rec_graph[,prevalence_medicine_use:=as.numeric(as.character(prevalence_medicine_use))]
+
+} else {
+ rec_graph<-NULL 
+}
+
+
+if(!is.null(rec_graph)){
+  fig.1<-vector(mode="list", length=length(unique(rec_graph[,event_definition])))
+for(i in 1:length(unique(rec_graph[,event_definition]))){
+rec_graph[event_definition==unique(rec_graph[,event_definition])[i]][,atc_code_4:=gsub(" ","- \n", atc_code_4)] 
+fig.1[[i]]<-ggplotly(ggplot(rec_graph[event_definition==unique(rec_graph[,event_definition])[i]], aes(x = year, y = prevalence_medicine_use, group=event_definition)) +
+                           geom_line(aes(color=atc_code_4)) +
+                           geom_point(aes(color=atc_code_4)) + 
+                               ggtitle(paste0("Medicine use prevalence:", unique(rec_graph[,event_definition])[i])) + 
+                       facet_wrap(~sex)+
+                               xlab("Year") +
+                               ylab("Prevalence rate")+
+                             theme_classic() +
+                       scale_y_continuous(labels = label_number(accuracy = 10))+
+                             guides(shape = guide_legend(override.aes = list(size = 0.3))) +
+                               theme(text=element_text(size=10),
+                                 axis.text.x = element_text(angle = 90, hjust = 1),
+                                     axis.title.x = element_text(colour = "#76b82a"),
+                                     axis.title.y = element_text(colour = "#76b82a"),
+                                     plot.title = element_text(colour = "#76b82a"),
+                                     strip.text.y = element_text(angle = 0),
+                                     legend.title = element_text(size = 6),
+               legend.text = element_text(size = 6))) 
+                                     
+} 
+  }
+```
+
+```{r , echo=FALSE}
+if(!is.null(res_4)){
+htmltools::tagList(list(fig.1))
+} else {
+  print("This table cannot be produced based on the available data.") 
+}
+```
+
+```{r, echo=F}
+if("fl" %in% ls()){rm(fl)}
+if("res_4" %in% ls()){rm(res_4)}
+if("res_graph" %in% ls()){rm(res_graph)}
+if("fig.1" %in% ls()){rm(fig.1)}
+```
+
+<br> 
+
+### Medication use prevalence by event definition, ATC code and year after a diagnosis
+
+```{r echo=F, warning=FALSE}
+if (subpopulations_present=="No"){
+  if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_MEDICINES/Masked/")), pattern="diag_med_prevalence_y_masked.csv"))>0){
+fl<-paste0(poi_dir,"EVENTS_MEDICINES/Masked/")
+res_5<-fread(paste0(fl,list.files(fl,"diag_med_prevalence_y_masked.csv")))
+if(res_5[,.N]>0){
+datatable(res_5, options = list(scrollX=T))
+  } else {
+    res_5<-NULL
+  print("This table cannot be produced based on the available data.")
+  }
+} else {
+  res_5<-NULL
+  print("This table cannot be produced based on the available data.")
+}
+} else {
+    if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_MEDICINES/",subpopulations_names[a], "/Masked/")), pattern="diag_med_prevalence_y_masked.csv"))>0){
+      fl<-paste0(poi_dir,"EVENTS_MEDICINES/",subpopulations_names[a], "/Masked/")
+    res_5<-fread(paste0(fl, list.files(fl, paste0(subpopulations_names[a],"_diag_med_prevalence_y_masked.csv"))))
+    if(res_5[,.N]>0){
+datatable(res_5, options = list(scrollX=T))
+    } else {
+      res_5<-NULL
+    print("This table cannot be produced based on the available data.") 
+    }
+  } else {
+    res_5<-NULL
+    print("This table cannot be produced based on the available data.")
+  }
+}
+```
+
+Counts smaller than 5 will be replaced with a count of 3. Then the approximate prevalence rates will be calculated as number of users with a diagnosis divided by number of subjects with a diagnosis and multiplied by 100.
+
+```{r , echo=FALSE, warning=FALSE}
+if(!is.null(res_5)){
+rec_graph<-res_5[no_users=="<5", no_users:= 3]
+rec_graph<-rec_graph[,no_users:=as.numeric(no_users)]
+rec_graph<-rec_graph[no_subjects=="<5", no_subjects:= 3]
+rec_graph<-rec_graph[,no_subjects:=as.numeric(no_subjects)]
+rec_graph<-rec_graph[,year:=as.factor(year)]
+rec_graph<-rec_graph[prevalence_medicine_use=="N/A", prevalence_medicine_use:= round((no_users/no_subjects)*100,2)]
+rec_graph<-as.data.table(rec_graph)
+#Set columns to the right type
+rec_graph[,prevalence_medicine_use:=as.numeric(as.character(prevalence_medicine_use))]
+
+} else {
+ rec_graph<-NULL 
+}
+
+
+if(!is.null(rec_graph)){
+  fig.1<-vector(mode="list", length=length(unique(rec_graph[,event_definition])))
+for(i in 1:length(unique(rec_graph[,event_definition]))){
+rec_graph[event_definition==unique(rec_graph[,event_definition])[i]][,atc_code_4:=gsub(" ","- \n", atc_code_4)] 
+fig.1[[i]]<-ggplotly(ggplot(rec_graph[event_definition==unique(rec_graph[,event_definition])[i]], aes(x = year, y = prevalence_medicine_use, group=event_definition)) +
+                           geom_line(aes(color=atc_code_4)) +
+                           geom_point(aes(color=atc_code_4)) + 
+                               ggtitle(paste0("Medicine use prevalence:", unique(rec_graph[,event_definition])[i])) + 
+                               xlab("Year") +
+                               ylab("Prevalence rate")+
+                             theme_classic() +
+                       scale_y_continuous(labels = label_number(accuracy = 10))+
+                             guides(shape = guide_legend(override.aes = list(size = 0.3))) +
+                               theme(text=element_text(size=10),
+                                 axis.text.x = element_text(angle = 90, hjust = 1),
+                                     axis.title.x = element_text(colour = "#76b82a"),
+                                     axis.title.y = element_text(colour = "#76b82a"),
+                                     plot.title = element_text(colour = "#76b82a"),
+                                     strip.text.y = element_text(angle = 0),
+                                     legend.title = element_text(size = 6),
+               legend.text = element_text(size = 6))) 
+                                     
+} 
+  }
+```
+
+```{r , echo=FALSE}
+if(!is.null(res_5)){
+htmltools::tagList(list(fig.1))
+} else {
+  print("This table cannot be produced based on the available data.") 
+}
+```
+
+```{r, echo=F}
+if("fl" %in% ls()){rm(fl)}
+if("res_5" %in% ls()){rm(res_5)}
+if("res_graph" %in% ls()){rm(res_graph)}
+if("fig.1" %in% ls()){rm(fig.1)}
+```
+
+<br> 
+
+### Number of medicines records by event definition, sex, ATC code and year after a diagnosis
+
+```{r echo=F, warning=FALSE}
+if (subpopulations_present=="No"){
+  if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_MEDICINES/Masked/")), pattern="diag_med_counts_ys_masked.csv"))>0){
+fl<-paste0(poi_dir,"EVENTS_MEDICINES/Masked/")
+res_6<-fread(paste0(fl,list.files(fl,"diag_med_counts_ys_masked.csv")))
+if(res_6[,.N]>0){
+datatable(res_6, options = list(scrollX=T))
+  } else {
+    res_6<-NULL
+  print("This table cannot be produced based on the available data.")
+  }
+} else {
+  res_6<-NULL
+  print("This table cannot be produced based on the available data.")
+}
+} else {
+    if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_MEDICINES/",subpopulations_names[a], "/Masked/")), pattern="diag_med_counts_ys_masked.csv"))>0){
+      fl<-paste0(poi_dir,"EVENTS_MEDICINES/",subpopulations_names[a], "/Masked/")
+    res_6<-fread(paste0(fl, list.files(fl, paste0(subpopulations_names[a],"_diag_med_counts_ys_masked.csv"))))
+    if(res_6[,.N]>0){
+datatable(res_6, options = list(scrollX=T))
+    } else {
+      res_6<-NULL
+    print("This table cannot be produced based on the available data.") 
+    }
+  } else {
+    res_6<-NULL
+    print("This table cannot be produced based on the available data.")
+  }
+}
+```
+
+Counts smaller than 5 will be replaced with a count of 3. Then the approximate percentage will be calculated as number of records divided by total number of records and multiplied by 100. When the number of records is zero it is not shown in the graph. See graph `Medication use prevalence by event definition, sex, ATC code and year after a diagnosis` for detailed information. 
+
+```{r , echo=FALSE, warning=FALSE}
+if(!is.null(res_6)){
+rec_graph<-res_6[no_records=="<5", no_records:= 3]
+rec_graph<-rec_graph[,no_records:=as.numeric(no_records)]
+rec_graph<-rec_graph[total_records=="<5", total_records:= 3]
+rec_graph<-rec_graph[,total_records:=as.numeric(total_records)]
+rec_graph<-rec_graph[,year:=as.factor(year)]
+rec_graph<-rec_graph[percentage=="N/A", percentage:= round((no_records/total_records)*100,2)]
+rec_graph<-as.data.table(rec_graph)
+#Set columns to the right type
+rec_graph[,percentage:=as.numeric(as.character(percentage))]
+
+} else {
+ rec_graph<-NULL 
+}
+
+
+if(!is.null(rec_graph)){
+  fig.1<-vector(mode="list", length=length(unique(rec_graph[,event_definition])))
+for(i in 1:length(unique(rec_graph[,event_definition]))){
+rec_graph[event_definition==unique(rec_graph[,event_definition])[i]][,atc_code_4:=gsub(" ","- \n", atc_code_4)] 
+fig.1[[i]]<-ggplotly(ggplot(rec_graph[event_definition==unique(rec_graph[,event_definition])[i]], aes(x = year, y = percentage, group=event_definition)) +
+                           geom_line(aes(color=atc_code_4)) +
+                           geom_point(aes(color=atc_code_4)) + 
+                               ggtitle(paste0("Medicine use:", unique(rec_graph[,event_definition])[i])) + 
+                               xlab("Year") +
+                               ylab("Percentage")+
+                       facet_wrap(~sex, scales = "fixed")+
+                             theme_classic() +
+                       scale_y_continuous(labels = label_number(accuracy = 10))+
+                             guides(shape = guide_legend(override.aes = list(size = 0.3))) +
+                               theme(text=element_text(size=10),
+                                 axis.text.x = element_text(angle = 90, hjust = 1),
+                                     axis.title.x = element_text(colour = "#76b82a"),
+                                     axis.title.y = element_text(colour = "#76b82a"),
+                                     plot.title = element_text(colour = "#76b82a"),
+                                     strip.text.y = element_text(angle = 0),
+                                     legend.title = element_text(size = 6),
+               legend.text = element_text(size = 6))) 
+                                     
+} 
+  }
+```
+
+```{r , echo=FALSE}
+if(!is.null(res_6)){
+htmltools::tagList(list(fig.1))
+} else {
+  print("This table cannot be produced based on the available data.") 
+}
+```
+
+```{r, echo=F}
+if("fl" %in% ls()){rm(fl)}
+if("res_6" %in% ls()){rm(res_6)}
+if("res_graph" %in% ls()){rm(res_graph)}
+if("fig.1" %in% ls()){rm(fig.1)}
+```
+
+
+<br> 
+
+### Number of medicines records by event definition, meaning, ATC code and year after a diagnosis
+
+```{r echo=F, warning=FALSE}
+if (subpopulations_present=="No"){
+  if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_MEDICINES/Masked/")), pattern="diag_med_counts_ym_masked.csv"))>0){
+fl<-paste0(poi_dir,"EVENTS_MEDICINES/Masked/")
+res_7<-fread(paste0(fl,list.files(fl,"diag_med_counts_ym_masked.csv")))
+if(res_7[,.N]>0){
+datatable(res_7, options = list(scrollX=T))
+  } else {
+    res_7<-NULL
+  print("This table cannot be produced based on the available data.")
+  }
+} else {
+  res_7<-NULL
+  print("This table cannot be produced based on the available data.")
+}
+} else {
+    if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_MEDICINES/",subpopulations_names[a], "/Masked/")), pattern="diag_med_counts_ym_masked.csv"))>0){
+      res_7<-paste0(poi_dir,"EVENTS_MEDICINES/",subpopulations_names[a], "/Masked/")
+    res_7<-fread(paste0(fl, list.files(fl, paste0(subpopulations_names[a],"_diag_med_counts_ym_masked.csv"))))
+    if(res_7[,.N]>0){
+datatable(res_7, options = list(scrollX=T))
+    } else {
+      res_7<-NULL
+    print("This table cannot be produced based on the available data.") 
+    }
+  } else {
+    res_7<-NULL
+    print("This table cannot be produced based on the available data.")
+  }
+}
+```
+
+Counts smaller than 5 will be replaced with a count of 3. Then the approximate percentage will be calculated as number of records divided by total number of records and multiplied by 100. When the number of records is zero it is not shown in the graph. See graph `Medication use prevalence by event definition, sex, ATC code and year after a diagnosis` for detailed information. 
+
+```{r , echo=FALSE, warning=FALSE}
+if(!is.null(res_7)){
+rec_graph<-res_7[no_records=="<5", no_records:= 3]
+rec_graph<-rec_graph[,no_records:=as.numeric(no_records)]
+rec_graph<-rec_graph[total_records=="<5", total_records:= 3]
+rec_graph<-rec_graph[,total_records:=as.numeric(total_records)]
+rec_graph<-rec_graph[,year:=as.factor(year)]
+rec_graph<-rec_graph[percentage=="N/A", percentage:= round((no_records/total_records)*100,2)]
+rec_graph<-as.data.table(rec_graph)
+#Set columns to the right type
+rec_graph[,percentage:=as.numeric(as.character(percentage))]
+rec_graph[,atc_meaning:=paste(atc_code_4,meaning,sep=":")]
+
+} else {
+ rec_graph<-NULL 
+}
+
+
+if(!is.null(rec_graph)){
+  fig.1<-vector(mode="list", length=length(unique(rec_graph[,event_definition])))
+for(i in 1:length(unique(rec_graph[,event_definition]))){
+rec_graph[event_definition==unique(rec_graph[,event_definition])[i]][,atc_meaning:=gsub(" ","- \n", atc_meaning)] 
+fig.1[[i]]<-ggplotly(ggplot(rec_graph[event_definition==unique(rec_graph[,event_definition])[i]], aes(x = year, y = percentage, group=event_definition)) +
+                           geom_line(aes(color=atc_meaning)) +
+                           geom_point(aes(color=atc_meaning)) + 
+                               ggtitle(paste0("Medicine use:", unique(rec_graph[,event_definition])[i])) + 
+                               xlab("Year") +
+                               ylab("Percentage")+
+                             theme_classic() +
+                       scale_y_continuous(labels = label_number(accuracy = 10))+
+                             guides(shape = guide_legend(override.aes = list(size = 0.3))) +
+                               theme(text=element_text(size=10),
+                                 axis.text.x = element_text(angle = 90, hjust = 1),
+                                     axis.title.x = element_text(colour = "#76b82a"),
+                                     axis.title.y = element_text(colour = "#76b82a"),
+                                     plot.title = element_text(colour = "#76b82a"),
+                                     strip.text.y = element_text(angle = 0),
+                                     legend.title = element_text(size = 6),
+               legend.text = element_text(size = 6))) 
+                                     
+} 
+  }
+```
+
+```{r , echo=FALSE}
+if(!is.null(res_7)){
+htmltools::tagList(list(fig.1))
+} else {
+  print("This table cannot be produced based on the available data.") 
+}
+```
+
+```{r, echo=F}
+if("fl" %in% ls()){rm(fl)}
+if("res_7" %in% ls()){rm(res_7)}
+if("res_graph" %in% ls()){rm(res_graph)}
+if("fig.1" %in% ls()){rm(fig.1)}
+```
+
+<br> 
+
+### Number of medicines records by event definition, ATC code and year after a diagnosis
+
+```{r echo=F, warning=FALSE}
+if (subpopulations_present=="No"){
+  if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_MEDICINES/Masked/")), pattern="diag_med_counts_y_masked.csv"))>0){
+fl<-paste0(poi_dir,"EVENTS_MEDICINES/Masked/")
+res_8<-fread(paste0(fl,list.files(fl,"diag_med_counts_y_masked.csv")))
+if(res_8[,.N]>0){
+datatable(res_8, options = list(scrollX=T))
+  } else {
+    res_8<-NULL
+  print("This table cannot be produced based on the available data.")
+  }
+} else {
+  res_8<-NULL
+  print("This table cannot be produced based on the available data.")
+}
+} else {
+    if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_MEDICINES/",subpopulations_names[a], "/Masked/")), pattern="diag_med_counts_y_masked.csv"))>0){
+      res_8<-paste0(poi_dir,"EVENTS_MEDICINES/",subpopulations_names[a], "/Masked/")
+    res_8<-fread(paste0(fl, list.files(fl, paste0(subpopulations_names[a],"_diag_med_counts_y_masked.csv"))))
+    if(res_8[,.N]>0){
+datatable(res_8, options = list(scrollX=T))
+    } else {
+      res_8<-NULL
+    print("This table cannot be produced based on the available data.") 
+    }
+  } else {
+    res_8<-NULL
+    print("This table cannot be produced based on the available data.")
+  }
+}
+```
+
+Counts smaller than 5 will be replaced with a count of 3. Then the approximate percentage will be calculated as number of records divided by total number of records and multiplied by 100. When the number of records is zero it is not shown in the graph. See graph `Medication use prevalence by event definition, sex, ATC code and year after a diagnosis` for detailed information. 
+
+```{r , echo=FALSE, warning=FALSE}
+if(!is.null(res_8)){
+rec_graph<-res_8[no_records=="<5", no_records:= 3]
+rec_graph<-rec_graph[,no_records:=as.numeric(no_records)]
+rec_graph<-rec_graph[total_records=="<5", total_records:= 3]
+rec_graph<-rec_graph[,total_records:=as.numeric(total_records)]
+rec_graph<-rec_graph[,year:=as.factor(year)]
+rec_graph<-rec_graph[percentage=="N/A", percentage:= round((no_records/total_records)*100,2)]
+rec_graph<-as.data.table(rec_graph)
+#Set columns to the right type
+rec_graph[,percentage:=as.numeric(as.character(percentage))]
+
+} else {
+ rec_graph<-NULL 
+}
+
+
+if(!is.null(rec_graph)){
+  fig.1<-vector(mode="list", length=length(unique(rec_graph[,event_definition])))
+for(i in 1:length(unique(rec_graph[,event_definition]))){
+rec_graph[event_definition==unique(rec_graph[,event_definition])[i]][,atc_code_4:=gsub(" ","- \n", atc_code_4)] 
+fig.1[[i]]<-ggplotly(ggplot(rec_graph[event_definition==unique(rec_graph[,event_definition])[i]], aes(x = year, y = percentage, group=event_definition)) +
+                           geom_line(aes(color=atc_code_4)) +
+                           geom_point(aes(color=atc_code_4)) + 
+                               ggtitle(paste0("Medicine use:", unique(rec_graph[,event_definition])[i])) + 
+                               xlab("Year") +
+                               ylab("Percentage")+
+                             theme_classic() +
+                       scale_y_continuous(labels = label_number(accuracy = 10))+
+                             guides(shape = guide_legend(override.aes = list(size = 0.3))) +
+                               theme(text=element_text(size=10),
+                                 axis.text.x = element_text(angle = 90, hjust = 1),
+                                     axis.title.x = element_text(colour = "#76b82a"),
+                                     axis.title.y = element_text(colour = "#76b82a"),
+                                     plot.title = element_text(colour = "#76b82a"),
+                                     strip.text.y = element_text(angle = 0),
+                                     legend.title = element_text(size = 6),
+               legend.text = element_text(size = 6))) 
+                                     
+} 
+  }
+```
+
+```{r , echo=FALSE}
+if(!is.null(res_8)){
+htmltools::tagList(list(fig.1))
+} else {
+  print("This table cannot be produced based on the available data.") 
+}
+```
+
+```{r, echo=F}
+if("fl" %in% ls()){rm(fl)}
+if("res_8" %in% ls()){rm(res_8)}
+if("res_graph" %in% ls()){rm(res_graph)}
+if("fig.1" %in% ls()){rm(fig.1)}
+```
+
+
+</div>
+
+<br>
+
+<div class = 'box4'>
+
+## 3. Vaccine exposure after a diagnosis
+
+<br> 
+
+Excluded records
+```{r echo=F, warning=FALSE}
+if (subpopulations_present=="No"){
+  if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_VACCINES")), pattern="diag_vacc_prior_removed.csv"))>0){
+fl<-paste0(poi_dir,"EVENTS_VACCINES/")
+res_vacc<-fread(paste0(fl,list.files(fl,"diag_vacc_prior_removed.csv")))
+if(res_vacc[,.N]>0){
+datatable(res_vacc, options = list(scrollX=T))
+  } else {
+    res_vacc<-NULL
+  print("This table cannot be produced based on the available data.")
+  }
+} else {
+  res_vacc<-NULL
+  print("This table cannot be produced based on the available data.")
+}
+} else {
+    if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_VACCINES/",subpopulations_names[a], "/Masked/")), pattern="diag_vacc_prior_removed.csv"))>0){
+      fl<-paste0(poi_dir,"EVENTS_VACCINES/",subpopulations_names[a],"/")
+    res_vacc<-fread(paste0(fl, list.files(fl, paste0(subpopulations_names[a],"_diag_vacc_prior_removed.csv"))))
+    if(res_vacc[,.N]>0){
+datatable(res_vacc, options = list(scrollX=T))
+    } else {
+      res_vacc<-NULL
+    print("This table cannot be produced based on the available data.") 
+    }
+  } else {
+    res_vacc<-NULL
+    print("This table cannot be produced based on the available data.")
+  }
+}
+```
+
+```{r, echo=F}
+if("fl" %in% ls()){rm(fl)}
+if("res_vacc" %in% ls()){rm(res_vacc)}
+```
+
+<br>
+
+### Vaccine administration prevalence by event definition, sex, ATC code and year after a diagnosis
+
+```{r echo=F, warning=FALSE}
+if (subpopulations_present=="No"){
+  if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_VACCINES/Masked/")), pattern="diag_vacc_prevalence_ys_masked.csv"))>0){
+fl<-paste0(poi_dir,"EVENTS_VACCINES/Masked/")
+res_9<-fread(paste0(fl,list.files(fl,"diag_vacc_prevalence_ys_masked.csv")))
+if(res_9[,.N]>0){
+datatable(res_9, options = list(scrollX=T))
+  } else {
+    res_9<-NULL
+  print("This table cannot be produced based on the available data.")
+  }
+} else {
+  res_9<-NULL
+  print("This table cannot be produced based on the available data.")
+}
+} else {
+    if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_VACCINES/",subpopulations_names[a], "/Masked/")), pattern="diag_vacc_prevalence_ys_masked.csv"))>0){
+      fl<-paste0(poi_dir,"EVENTS_VACCINES/",subpopulations_names[a], "/Masked/")
+    res_9<-fread(paste0(fl, list.files(fl, paste0(subpopulations_names[a],"_diag_vacc_prevalence_ys_masked.csv"))))
+    if(res_9[,.N]>0){
+datatable(res_9, options = list(scrollX=T))
+    } else {
+      res_9<-NULL
+    print("This table cannot be produced based on the available data.") 
+    }
+  } else {
+    res_9<-NULL
+    print("This table cannot be produced based on the available data.")
+  }
+}
+```
+
+Counts smaller than 5 will be replaced with a count of 3. Then the approximate prevalence rates will be calculated as number of users with a diagnosis divided by number of subjects with a diagnosis and multiplied by 100.
+
+```{r , echo=FALSE, warning=FALSE}
+if(!is.null(res_9)){
+rec_graph<-res_9[no_users=="<5", no_users:= 3]
+rec_graph<-rec_graph[,no_users:=as.numeric(no_users)]
+rec_graph<-rec_graph[no_subjects=="<5", no_subjects:= 3]
+rec_graph<-rec_graph[,no_subjects:=as.numeric(no_subjects)]
+rec_graph<-rec_graph[,year:=as.factor(year)]
+rec_graph<-rec_graph[prevalence_vaccine_exposure=="N/A", prevalence_vaccine_exposure:= round((no_users/no_subjects)*100,2)]
+rec_graph<-as.data.table(rec_graph)
+#Set columns to the right type
+rec_graph[,prevalence_vaccine_exposure:=as.numeric(as.character(prevalence_vaccine_exposure))]
+
+} else {
+ rec_graph<-NULL 
+}
+
+
+if(!is.null(rec_graph)){
+  fig.1<-vector(mode="list", length=length(unique(rec_graph[,event_definition])))
+for(i in 1:length(unique(rec_graph[,event_definition]))){
+rec_graph[event_definition==unique(rec_graph[,event_definition])[i]][,atc_code_4:=gsub(" ","- \n", atc_code_4)] 
+fig.1[[i]]<-ggplotly(ggplot(rec_graph[event_definition==unique(rec_graph[,event_definition])[i]], aes(x = year, y = prevalence_vaccine_exposure, group=event_definition)) +
+                           geom_line(aes(color=atc_code_4)) +
+                           geom_point(aes(color=atc_code_4)) + 
+                               ggtitle(paste0("Medicine use prevalence:", unique(rec_graph[,event_definition])[i])) + 
+                       facet_wrap(~sex, scales = "fixed")+
+                               xlab("Year") +
+                               ylab("Prevalence rate")+
+                             theme_classic() +
+                       scale_y_continuous(labels = label_number(accuracy = 10))+
+                             guides(shape = guide_legend(override.aes = list(size = 0.3))) +
+                               theme(text=element_text(size=10),
+                                 axis.text.x = element_text(angle = 90, hjust = 1),
+                                     axis.title.x = element_text(colour = "#76b82a"),
+                                     axis.title.y = element_text(colour = "#76b82a"),
+                                     plot.title = element_text(colour = "#76b82a"),
+                                     strip.text.y = element_text(angle = 0),
+                                     legend.title = element_text(size = 6),
+               legend.text = element_text(size = 6))) 
+                                     
+} 
+  }
+```
+
+```{r , echo=FALSE}
+if(!is.null(res_9)){
+htmltools::tagList(list(fig.1))
+} else {
+  print("This table cannot be produced based on the available data.") 
+}
+```
+
+```{r, echo=F}
+if("fl" %in% ls()){rm(fl)}
+if("res_9" %in% ls()){rm(res_9)}
+if("res_graph" %in% ls()){rm(res_graph)}
+if("fig.1" %in% ls()){rm(fig.1)}
+```
+
+<br> 
+
+### Vaccine administration prevalence by event definition, ATC code and year after a diagnosis
+
+```{r echo=F, warning=FALSE}
+if (subpopulations_present=="No"){
+  if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_VACCINES/Masked/")), pattern="diag_vacc_prevalence_y_masked.csv"))>0){
+fl<-paste0(poi_dir,"EVENTS_VACCINES/Masked/")
+res_10<-fread(paste0(fl,list.files(fl,"diag_vacc_prevalence_y_masked.csv")))
+if(res_10[,.N]>0){
+datatable(res_10, options = list(scrollX=T))
+  } else {
+    res_10<-NULL
+  print("This table cannot be produced based on the available data.")
+  }
+} else {
+  res_10<-NULL
+  print("This table cannot be produced based on the available data.")
+}
+} else {
+    if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_VACCINES/",subpopulations_names[a], "/Masked/")), pattern="diag_vacc_prevalence_y_masked.csv"))>0){
+      fl<-paste0(poi_dir,"EVENTS_VACCINES/",subpopulations_names[a], "/Masked/")
+    res_10<-fread(paste0(fl, list.files(fl, paste0(subpopulations_names[a],"_diag_vacc_prevalence_y_masked.csv"))))
+    if(res_10[,.N]>0){
+datatable(res_10, options = list(scrollX=T))
+    } else {
+      res_10<-NULL
+    print("This table cannot be produced based on the available data.") 
+    }
+  } else {
+    res_10<-NULL
+    print("This table cannot be produced based on the available data.")
+  }
+}
+```
+
+Counts smaller than 5 will be replaced with a count of 3. Then the approximate prevalence rates will be calculated as number of users with a diagnosis divided by number of subjects with a diagnosis and multiplied by 100.
+
+```{r , echo=FALSE, warning=FALSE}
+if(!is.null(res_10)){
+rec_graph<-res_10[no_users=="<5", no_users:= 3]
+rec_graph<-rec_graph[,no_users:=as.numeric(no_users)]
+rec_graph<-rec_graph[no_subjects=="<5", no_subjects:= 3]
+rec_graph<-rec_graph[,no_subjects:=as.numeric(no_subjects)]
+rec_graph<-rec_graph[,year:=as.factor(year)]
+rec_graph<-rec_graph[prevalence_vaccine_exposure=="N/A", prevalence_vaccine_exposure:= round((no_users/no_subjects)*100,2)]
+rec_graph<-as.data.table(rec_graph)
+#Set columns to the right type
+rec_graph[,prevalence_vaccine_exposure:=as.numeric(as.character(prevalence_vaccine_exposure))]
+
+} else {
+ rec_graph<-NULL 
+}
+
+
+if(!is.null(rec_graph)){
+  fig.1<-vector(mode="list", length=length(unique(rec_graph[,event_definition])))
+for(i in 1:length(unique(rec_graph[,event_definition]))){
+rec_graph[event_definition==unique(rec_graph[,event_definition])[i]][,atc_code_4:=gsub(" ","- \n", atc_code_4)] 
+fig.1[[i]]<-ggplotly(ggplot(rec_graph[event_definition==unique(rec_graph[,event_definition])[i]], aes(x = year, y = prevalence_vaccine_exposure, group=event_definition)) +
+                           geom_line(aes(color=atc_code_4)) +
+                           geom_point(aes(color=atc_code_4)) + 
+                               ggtitle(paste0("Medicine use prevalence:", unique(rec_graph[,event_definition])[i])) + 
+                               xlab("Year") +
+                               ylab("Prevalence rate")+
+                             theme_classic() +
+                       scale_y_continuous(labels = label_number(accuracy = 10))+
+                             guides(shape = guide_legend(override.aes = list(size = 0.3))) +
+                               theme(text=element_text(size=10),
+                                 axis.text.x = element_text(angle = 90, hjust = 1),
+                                     axis.title.x = element_text(colour = "#76b82a"),
+                                     axis.title.y = element_text(colour = "#76b82a"),
+                                     plot.title = element_text(colour = "#76b82a"),
+                                     strip.text.y = element_text(angle = 0),
+                                     legend.title = element_text(size = 6),
+               legend.text = element_text(size = 6))) 
+                                     
+} 
+  }
+```
+
+```{r , echo=FALSE}
+if(!is.null(res_10)){
+htmltools::tagList(list(fig.1))
+} else {
+  print("This table cannot be produced based on the available data.") 
+}
+```
+
+```{r, echo=F}
+if("fl" %in% ls()){rm(fl)}
+if("res_10" %in% ls()){rm(res_10)}
+if("res_graph" %in% ls()){rm(res_graph)}
+if("fig.1" %in% ls()){rm(fig.1)}
+```
+
+<br> 
+
+### Number of vaccine administrations by event definition, sex, ATC code and year after a diagnosis
+
+```{r echo=F, warning=FALSE}
+if (subpopulations_present=="No"){
+  if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_VACCINES/Masked/")), pattern="diag_vacc_counts_ys_masked.csv"))>0){
+fl<-paste0(poi_dir,"EVENTS_VACCINES/Masked/")
+res_11<-fread(paste0(fl,list.files(fl,"diag_vacc_counts_ys_masked.csv")))
+if(res_11[,.N]>0){
+datatable(res_11, options = list(scrollX=T))
+  } else {
+    res_11<-NULL
+  print("This table cannot be produced based on the available data.")
+  }
+} else {
+  res_11<-NULL
+  print("This table cannot be produced based on the available data.")
+}
+} else {
+    if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_VACCINES/",subpopulations_names[a], "/Masked/")), pattern="diag_vacc_counts_ys_masked.csv"))>0){
+      fl<-paste0(poi_dir,"EVENTS_VACCINES/",subpopulations_names[a], "/Masked/")
+    res_11<-fread(paste0(fl, list.files(fl, paste0(subpopulations_names[a],"_diag_vacc_counts_ys_masked.csv"))))
+    if(res_11[,.N]>0){
+datatable(res_11, options = list(scrollX=T))
+    } else {
+      res_11<-NULL
+    print("This table cannot be produced based on the available data.") 
+    }
+  } else {
+    res_11<-NULL
+    print("This table cannot be produced based on the available data.")
+  }
+}
+```
+
+Counts smaller than 5 will be replaced with a count of 3. Then the approximate percentage will be calculated as number of records divided by total number of records and multiplied by 100. When the number of records is zero it is not shown in the graph. See graph `Vaccine administration prevalence by event definition, sex, ATC code and year after a diagnosis` for detailed information. 
+
+```{r , echo=FALSE, warning=FALSE}
+if(!is.null(res_11)){
+rec_graph<-res_11[no_records=="<5", no_records:= 3]
+rec_graph<-rec_graph[,no_records:=as.numeric(no_records)]
+rec_graph<-rec_graph[total_records=="<5", total_records:= 3]
+rec_graph<-rec_graph[,total_records:=as.numeric(total_records)]
+rec_graph<-rec_graph[,year:=as.factor(year)]
+rec_graph<-rec_graph[percentage=="N/A", percentage:= round((no_records/total_records)*100,2)]
+rec_graph<-as.data.table(rec_graph)
+#Set columns to the right type
+rec_graph[,percentage:=as.numeric(as.character(percentage))]
+
+} else {
+ rec_graph<-NULL 
+}
+
+
+if(!is.null(rec_graph)){
+  fig.1<-vector(mode="list", length=length(unique(rec_graph[,event_definition])))
+for(i in 1:length(unique(rec_graph[,event_definition]))){
+rec_graph[event_definition==unique(rec_graph[,event_definition])[i]][,atc_code_4:=gsub(" ","- \n", atc_code_4)] 
+fig.1[[i]]<-ggplotly(ggplot(rec_graph[event_definition==unique(rec_graph[,event_definition])[i]], aes(x = year, y = percentage, group=event_definition)) +
+                           geom_line(aes(color=atc_code_4)) +
+                           geom_point(aes(color=atc_code_4)) + 
+                               ggtitle(paste0("Medicine use:", unique(rec_graph[,event_definition])[i])) + 
+                               xlab("Year") +
+                               ylab("Percentage")+
+                       facet_wrap(~sex, scales = "fixed")+
+                             theme_classic() +
+                       scale_y_continuous(labels = label_number(accuracy = 10))+
+                             guides(shape = guide_legend(override.aes = list(size = 0.3))) +
+                               theme(text=element_text(size=10),
+                                 axis.text.x = element_text(angle = 90, hjust = 1),
+                                     axis.title.x = element_text(colour = "#76b82a"),
+                                     axis.title.y = element_text(colour = "#76b82a"),
+                                     plot.title = element_text(colour = "#76b82a"),
+                                     strip.text.y = element_text(angle = 0),
+                                     legend.title = element_text(size = 6),
+               legend.text = element_text(size = 6))) 
+                                     
+} 
+  }
+```
+
+```{r , echo=FALSE}
+if(!is.null(res_11)){
+htmltools::tagList(list(fig.1))
+} else {
+  print("This table cannot be produced based on the available data.") 
+}
+```
+
+```{r, echo=F}
+if("fl" %in% ls()){rm(fl)}
+if("res_11" %in% ls()){rm(res_11)}
+if("res_graph" %in% ls()){rm(res_graph)}
+if("fig.1" %in% ls()){rm(fig.1)}
+```
+
+
+<br> 
+
+### Number of vaccine administrations by event definition, meaning, ATC code and year after a diagnosis
+
+```{r echo=F, warning=FALSE}
+if (subpopulations_present=="No"){
+  if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_VACCINES/Masked/")), pattern="diag_vacc_counts_ym_masked.csv"))>0){
+fl<-paste0(poi_dir,"EVENTS_VACCINES/Masked/")
+res_12<-fread(paste0(fl,list.files(fl,"diag_vacc_counts_ym_masked.csv")))
+if(res_12[,.N]>0){
+datatable(res_12, options = list(scrollX=T))
+  } else {
+    res_12<-NULL
+  print("This table cannot be produced based on the available data.")
+  }
+} else {
+  res_12<-NULL
+  print("This table cannot be produced based on the available data.")
+}
+} else {
+    if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_VACCINES/",subpopulations_names[a], "/Masked/")), pattern="diag_vacc_counts_ym_masked.csv"))>0){
+      res_12<-paste0(poi_dir,"EVENTS_VACCINES/",subpopulations_names[a], "/Masked/")
+    res_12<-fread(paste0(fl, list.files(fl, paste0(subpopulations_names[a],"_diag_vacc_counts_ym_masked.csv"))))
+    if(res_12[,.N]>0){
+datatable(res_12, options = list(scrollX=T))
+    } else {
+      res_12<-NULL
+    print("This table cannot be produced based on the available data.") 
+    }
+  } else {
+    res_12<-NULL
+    print("This table cannot be produced based on the available data.")
+  }
+}
+```
+
+Counts smaller than 5 will be replaced with a count of 3. Then the approximate percentage will be calculated as number of records divided by total number of records and multiplied by 100. When the number of records is zero it is not shown in the graph. See graph `Vaccine administration prevalence by event definition, sex, ATC code and year after a diagnosis` for detailed information. 
+
+```{r , echo=FALSE, warning=FALSE}
+if(!is.null(res_12)){
+rec_graph<-res_12[no_records=="<5", no_records:= 3]
+rec_graph<-rec_graph[,no_records:=as.numeric(no_records)]
+rec_graph<-rec_graph[total_records=="<5", total_records:= 3]
+rec_graph<-rec_graph[,total_records:=as.numeric(total_records)]
+rec_graph<-rec_graph[,year:=as.factor(year)]
+rec_graph<-rec_graph[percentage=="N/A", percentage:= round((no_records/total_records)*100,2)]
+rec_graph<-as.data.table(rec_graph)
+#Set columns to the right type
+rec_graph[,percentage:=as.numeric(as.character(percentage))]
+rec_graph[,atc_meaning:=paste(atc_code_4,meaning,sep=":")]
+
+} else {
+ rec_graph<-NULL 
+}
+
+
+if(!is.null(rec_graph)){
+  fig.1<-vector(mode="list", length=length(unique(rec_graph[,event_definition])))
+for(i in 1:length(unique(rec_graph[,event_definition]))){
+rec_graph[event_definition==unique(rec_graph[,event_definition])[i]][,atc_meaning:=gsub(" ","- \n", atc_meaning)] 
+fig.1[[i]]<-ggplotly(ggplot(rec_graph[event_definition==unique(rec_graph[,event_definition])[i]], aes(x = year, y = percentage, group=event_definition)) +
+                           geom_line(aes(color=atc_meaning)) +
+                           geom_point(aes(color=atc_meaning)) + 
+                               ggtitle(paste0("Medicine use:", unique(rec_graph[,event_definition])[i])) + 
+                               xlab("Year") +
+                               ylab("Percentage")+
+                             theme_classic() +
+                       scale_y_continuous(labels = label_number(accuracy = 10))+
+                             guides(shape = guide_legend(override.aes = list(size = 0.3))) +
+                               theme(text=element_text(size=10),
+                                 axis.text.x = element_text(angle = 90, hjust = 1),
+                                     axis.title.x = element_text(colour = "#76b82a"),
+                                     axis.title.y = element_text(colour = "#76b82a"),
+                                     plot.title = element_text(colour = "#76b82a"),
+                                     strip.text.y = element_text(angle = 0),
+                                     legend.title = element_text(size = 6),
+               legend.text = element_text(size = 6))) 
+                                     
+} 
+  }
+```
+
+```{r , echo=FALSE}
+if(!is.null(res_12)){
+htmltools::tagList(list(fig.1))
+} else {
+  print("This table cannot be produced based on the available data.") 
+}
+```
+
+```{r, echo=F}
+if("fl" %in% ls()){rm(fl)}
+if("res_12" %in% ls()){rm(res_12)}
+if("res_graph" %in% ls()){rm(res_graph)}
+if("fig.1" %in% ls()){rm(fig.1)}
+```
+
+<br> 
+
+### Number of vaccine administrations by event definition, ATC code and year after a diagnosis
+
+```{r echo=F, warning=FALSE}
+if (subpopulations_present=="No"){
+  if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_VACCINES/Masked/")), pattern="diag_vacc_counts_y_masked.csv"))>0){
+fl<-paste0(poi_dir,"EVENTS_VACCINES/Masked/")
+res_13<-fread(paste0(fl,list.files(fl,"diag_vacc_counts_y_masked.csv")))
+if(res_13[,.N]>0){
+datatable(res_13, options = list(scrollX=T))
+  } else {
+    res_13<-NULL
+  print("This table cannot be produced based on the available data.")
+  }
+} else {
+  res_13<-NULL
+  print("This table cannot be produced based on the available data.")
+}
+} else {
+    if(sum(grepl(list.files(paste0(poi_dir,"EVENTS_VACCINES/",subpopulations_names[a], "/Masked/")), pattern="diag_vacc_counts_y_masked.csv"))>0){
+      res_13<-paste0(poi_dir,"EVENTS_VACCINES/",subpopulations_names[a], "/Masked/")
+    res_13<-fread(paste0(fl, list.files(fl, paste0(subpopulations_names[a],"_diag_vacc_counts_y_masked.csv"))))
+    if(res_13[,.N]>0){
+datatable(res_13, options = list(scrollX=T))
+    } else {
+      res_13<-NULL
+    print("This table cannot be produced based on the available data.") 
+    }
+  } else {
+    res_13<-NULL
+    print("This table cannot be produced based on the available data.")
+  }
+}
+```
+
+Counts smaller than 5 will be replaced with a count of 3. Then the approximate percentage will be calculated as number of records divided by total number of records and multiplied by 100. When the number of records is zero it is not shown in the graph. See graph `Vaccine administration prevalence by event definition, sex, ATC code and year after a diagnosis` for detailed information. 
+
+```{r , echo=FALSE, warning=FALSE}
+if(!is.null(res_13)){
+rec_graph<-res_13[no_records=="<5", no_records:= 3]
+rec_graph<-rec_graph[,no_records:=as.numeric(no_records)]
+rec_graph<-rec_graph[total_records=="<5", total_records:= 3]
+rec_graph<-rec_graph[,total_records:=as.numeric(total_records)]
+rec_graph<-rec_graph[,year:=as.factor(year)]
+rec_graph<-rec_graph[percentage=="N/A", percentage:= round((no_records/total_records)*100,2)]
+rec_graph<-as.data.table(rec_graph)
+#Set columns to the right type
+rec_graph[,percentage:=as.numeric(as.character(percentage))]
+
+} else {
+ rec_graph<-NULL 
+}
+
+
+if(!is.null(rec_graph)){
+  fig.1<-vector(mode="list", length=length(unique(rec_graph[,event_definition])))
+for(i in 1:length(unique(rec_graph[,event_definition]))){
+rec_graph[event_definition==unique(rec_graph[,event_definition])[i]][,atc_code_4:=gsub(" ","- \n", atc_code_4)] 
+fig.1[[i]]<-ggplotly(ggplot(rec_graph[event_definition==unique(rec_graph[,event_definition])[i]], aes(x = year, y = percentage, group=event_definition)) +
+                           geom_line(aes(color=atc_code_4)) +
+                           geom_point(aes(color=atc_code_4)) + 
+                               ggtitle(paste0("Medicine use:", unique(rec_graph[,event_definition])[i])) + 
+                               xlab("Year") +
+                               ylab("Percentage")+
+                             theme_classic() +
+                       scale_y_continuous(labels = label_number(accuracy = 10))+
+                             guides(shape = guide_legend(override.aes = list(size = 0.3))) +
+                               theme(text=element_text(size=10),
+                                 axis.text.x = element_text(angle = 90, hjust = 1),
+                                     axis.title.x = element_text(colour = "#76b82a"),
+                                     axis.title.y = element_text(colour = "#76b82a"),
+                                     plot.title = element_text(colour = "#76b82a"),
+                                     strip.text.y = element_text(angle = 0),
+                                     legend.title = element_text(size = 6),
+               legend.text = element_text(size = 6))) 
+                                     
+} 
+  }
+```
+
+```{r , echo=FALSE}
+if(!is.null(res_13)){
+htmltools::tagList(list(fig.1))
+} else {
+  print("This table cannot be produced based on the available data.") 
+}
+```
+
+```{r, echo=F}
+if("fl" %in% ls()){rm(fl)}
+if("res_13" %in% ls()){rm(res_13)}
+if("res_graph" %in% ls()){rm(res_graph)}
+if("fig.1" %in% ls()){rm(fig.1)}
+```
+
+</div>
+
+
+<br>
+
+<div class = 'box6'>
+
+Author: Vjola Hoxhaj Drs.   
+email: v.hoxhaj@umcutrecht.nl   
+Organisation: UMC Utrecht, Utrecht, The Netherlands    
+
+</div>
