@@ -30,6 +30,7 @@
     <li><a href="#license">License</a></li>
     <li><a href="#about-the-project">About The Project</a></li>
     <li><a href="#funder">Funder</a></li>
+     <li><a href="#citation">Citation</a></li>
     <li><a href="#contact">Contact</a></li>
   </ol>
 </details>
@@ -137,6 +138,10 @@ Distributed under the BSD 2-Clause License License. See `LICENSE` for more infor
 <!-- FUNDER -->
 ## Funder
 The ConcePTION project has received funding from the Innovative Medicines Initiative 2 Joint Undertaking under grant agreement No 821520. This Joint Undertaking receives support from the European Union’s Horizon 2020 research and innovation programme and EFPIA
+
+<!-- CITATION -->
+## Citation
+[![DOI](https://zenodo.org/badge/708767063.svg)](https://zenodo.org/doi/10.5281/zenodo.10035170)
 
 <!-- CONTACT -->
 ## Contact
