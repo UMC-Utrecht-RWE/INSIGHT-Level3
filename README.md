@@ -1,3 +1,4 @@
+![Status](https://img.shields.io/badge/Study_status-For_publication-blue) 
 
 <!-- PROJECT LOGO -->
 <br />
