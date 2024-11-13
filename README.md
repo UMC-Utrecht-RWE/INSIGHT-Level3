@@ -1,5 +1,9 @@
 ![Status](https://img.shields.io/badge/Study_status-For_publication-blue) 
 
+> [!IMPORTANT]
+> This is a mirrored repository for publication purposes.
+> For new releases, please request access to https://github.com/UMC-Utrecht-RWE/ConcePTION-INSIGHT-Level3
+
 <!-- PROJECT LOGO -->
 <br />
 <p align="left">
